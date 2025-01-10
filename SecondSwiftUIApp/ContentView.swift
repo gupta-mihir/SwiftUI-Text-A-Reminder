@@ -103,8 +103,10 @@ struct ContentView: View {
                 requestNotificationPermission()
                 handleDailyNotification(appointments: appointments)
             }
+            
             .sheet(item: $appointmentToEdit) { appointment in
                 EditAppointmentView(appointments: appointment)
+                    
             }
             
             
@@ -149,22 +151,37 @@ struct ContentView: View {
         Button(action: {
             selectedItem = appointment
             appointmentToEdit = appointment
-            }) { HStack {
-            VStack(alignment: .leading) {
-                Text(appointment.name)
-                    .font(.headline)
-                Text(appointment.date, style: .date)
-                    .font(.subheadline)
-                Text(appointment.date, style: .time)
-                    .font(.subheadline)
+        }) {
+            HStack {
+                if let imageData = appointment.contactImage, let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.gray, lineWidth: 1))
+                } else {
+                    Image(systemName: "person.circle.fill")
+                        .resizable()
+                        .frame(width: 40, height: 40)
+                        .foregroundColor(.gray)
+                }
+                
+                VStack(alignment: .leading) {
+                    Text(appointment.name)
+                        .font(.headline)
+                    Text(appointment.date, style: .date)
+                        .font(.subheadline)
+                    Text(appointment.date, style: .time)
+                        .font(.subheadline)
+                }
+                Spacer()
+                
+                if appointment.reminderSent {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.title2)
+                }
             }
-            Spacer()
-            if appointment.reminderSent {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
-                    .font(.title2) // Adjust size as needed
-            }
-        }
         }
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
@@ -173,7 +190,7 @@ struct ContentView: View {
                 Label("Delete", systemImage: "trash")
             }
             .tint(.red)
-
+            
             Button {
                 appointmentToEdit = appointment
             } label: {
@@ -181,6 +198,8 @@ struct ContentView: View {
             }
             .tint(.blue)
         }
+    }
+
         /*.sheet(isPresented: $isEdittingAppointment, onDismiss: {
             // Reset the selected appointment after dismissal
             selectedItem = nil
@@ -203,7 +222,7 @@ struct ContentView: View {
                 )
             }
         } */
-    }
+    
     private func updateAppointment(_ updatedAppointment: Appointments) {
         do {
             // Directly modify the passed object

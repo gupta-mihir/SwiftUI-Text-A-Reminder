@@ -8,7 +8,8 @@ struct NewAppointmentView: View {
     @State private var phoneNumber: String = ""
     @State private var date: Date = Date()
     @State private var duration: Int = 60 // Default duration in minutes
-    
+    @State private var contactImageData: Data? = nil // Store selected contact image data
+
     @State private var showingContactPicker = false
     @State private var eventStore = EKEventStore() // Event Store for calendar events
     
@@ -43,7 +44,14 @@ struct NewAppointmentView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        let newAppointment = Appointments(name: name, date: date, duration: duration, phoneNumber: phoneNumber, reminderSent: false)
+                        let newAppointment = Appointments(
+                            name: name,
+                            date: date,
+                            duration: duration,
+                            phoneNumber: phoneNumber,
+                            reminderSent: false,
+                            contactImage: contactImageData
+                            )
                         onSave(newAppointment)
                         addToCalendar(appointment: newAppointment) // Add appointment to calendar
                         dismiss()
@@ -55,6 +63,9 @@ struct NewAppointmentView: View {
                 ContactPicker { contact in
                     name = contact.name
                     phoneNumber = contact.phoneNumber
+                    contactImageData = contact.imageData
+                    
+                    
                 }
             }
         }
@@ -89,6 +100,7 @@ struct NewAppointmentView: View {
 struct Contact {
     let name: String
     let phoneNumber: String
+    let imageData: Data? //Store Image data if available
 }
 
 struct ContactPicker: UIViewControllerRepresentable {
@@ -116,7 +128,8 @@ struct ContactPicker: UIViewControllerRepresentable {
         func contactPicker(_ picker: CNContactPickerViewController, didSelect contact: CNContact) {
             let name = [contact.givenName, contact.familyName].filter { !$0.isEmpty }.joined(separator: " ")
             let phoneNumber = contact.phoneNumbers.first?.value.stringValue ?? ""
-            onSelect(Contact(name: name, phoneNumber: phoneNumber))
+            let imageData = contact.imageDataAvailable ? contact.thumbnailImageData : nil
+            onSelect(Contact(name: name, phoneNumber: phoneNumber, imageData: imageData))
         }
         
         func contactPickerDidCancel(_ picker: CNContactPickerViewController) {}
